@@ -1,5 +1,6 @@
 ﻿using ClinicaEstetica.DTO;
 using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 
 namespace ClinicaEstetica.DAL
@@ -27,9 +28,9 @@ namespace ClinicaEstetica.DAL
                     usuario.Email = dataReader["Email"].ToString();
                     usuario.Senha = dataReader["Senha"].ToString();
                     usuario.Status = bool.Parse(dataReader["status"].ToString());
-
-                    return usuario;
                 }
+
+                return usuario;
             }
             catch (Exception error)
             {
@@ -40,5 +41,147 @@ namespace ClinicaEstetica.DAL
                 Desconectar();
             }
         }
+
+        public List<UsuarioDTO> ListarTodos()
+        {
+            List<UsuarioDTO> usuarios = new List<UsuarioDTO>();
+
+            try
+            {
+                Conectar();
+                string sql = "SELECT * FROM Usuario ORDER BY Nome";
+                using (SqlCommand cmd = new SqlCommand(sql, connection))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        usuarios.Add(new UsuarioDTO()
+                        {
+                            IdUsuario = (int)reader["IdUsuario"],
+                            Nome = reader["Nome"].ToString(),
+                            Email = reader["Email"].ToString(),
+                            Senha = reader["Senha"].ToString(),
+                            Status = (bool)reader["Senha"],
+                            IdTipoUsuario = (int)reader["IdTipoUsuario"]
+                        });
+                    }
+                }
+
+            }
+            catch (Exception error)
+            {
+                throw new Exception($"Erro: {error.Message}");
+            }
+
+            return usuarios;
+        }
+
+        public List<TipoUsuarioDTO> GetTipos()
+        {
+            try
+            {
+                Conectar();
+                string sql = "SELECT * FROM TipoUsuario;";
+                command = new SqlCommand(sql, connection);
+                dataReader = command.ExecuteReader();
+                List<TipoUsuarioDTO> lista = new List<TipoUsuarioDTO>();
+                while (dataReader.Read())
+                {
+                    TipoUsuarioDTO tipoUsuario = new TipoUsuarioDTO();
+                    tipoUsuario.IdTipoUsuario = Convert.ToInt32(dataReader["IdTipoUsuario"]);
+                    tipoUsuario.Nome = dataReader["Nome"].ToString();
+                    lista.Add(tipoUsuario);
+                }
+
+                return lista;
+            }
+            catch (Exception error)
+            {
+
+                throw new Exception($"Erro: {error.Message}");
+            }
+            finally
+            {
+                Desconectar();
+            }
+        }
+
+        public void Create(UsuarioDTO usuario)
+        {
+            try
+            {
+                Conectar();
+                string sql = "INSERT INTO Usuario (IdTipoUsuario, Nome, Email, Senha, Status) VALUES (@idTipo, @nome, @email, @senha, @status)";
+                command = new SqlCommand(sql, connection);
+                command.Parameters.AddWithValue("@idTipo", usuario.IdTipoUsuario);
+                command.Parameters.AddWithValue("@nome", usuario.Nome);
+                command.Parameters.AddWithValue("@email", usuario.Email);
+                command.Parameters.AddWithValue("@senha", usuario.Senha);
+                command.Parameters.AddWithValue("@status", usuario.Status);
+
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao criar usuário: {ex.Message}");
+            }
+        }
+
+        public void Update(UsuarioDTO usuario)
+        {
+            try
+            {
+                Conectar();
+                string sql = "UPDATE INTO Usuario SET IdTipoUsuario=@idTipo, Nome=@nome, Email=@email, Senha=@senha, Status=@status WHERE IdUsuario=@idUsuario";
+                command = new SqlCommand(sql, connection);
+                command.Parameters.AddWithValue("@idTipo", usuario.IdTipoUsuario);
+                command.Parameters.AddWithValue("@nome", usuario.Nome);
+                command.Parameters.AddWithValue("@email", usuario.Email);
+                command.Parameters.AddWithValue("@senha", usuario.Senha);
+                command.Parameters.AddWithValue("@status", usuario.Status);
+                command.Parameters.AddWithValue("@idUsuario", usuario.IdUsuario);
+
+                command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao criar usuário: {ex.Message}");
+            }
+        }
+
+        public UsuarioDTO Pesquisar(int id)
+        {
+            try
+            {
+                Conectar();
+                string sql = "SELECT * FROM Usuario WBERE idUsuario=@idUsuario";
+                command = new SqlCommand(sql, connection);
+                command.Parameters.AddWithValue("@idUsuario", id);
+                dataReader = command.ExecuteReader();
+                UsuarioDTO usuarioDTO = null;
+                if (dataReader.Read())
+                {
+                    usuarioDTO = new UsuarioDTO();
+                    usuarioDTO.IdUsuario = Convert.ToInt32(dataReader["IdUsuario"]);
+                    usuarioDTO.Nome = dataReader["Nome"].ToString();
+                    usuarioDTO.Email = dataReader["Email"].ToString();
+                    usuarioDTO.Senha = dataReader["Senha"].ToString();
+                    usuarioDTO.Status = Convert.ToBoolean(dataReader["Status"]);
+                    usuarioDTO.IdTipoUsuario = Convert.ToInt32(dataReader["IdTipoUsuario"]);
+                }
+
+                return usuarioDTO;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao buscar usuário: {ex.Message}");
+            }
+            finally 
+            {
+                Desconectar();
+            }
+        }
+
+    
     }
 }
