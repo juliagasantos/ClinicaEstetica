@@ -5,7 +5,7 @@ using System.Data.SqlClient;
 
 namespace ClinicaEstetica.DAL
 {
-    public class UsuarioDAL:Conexao
+    public class UsuarioDAL : Conexao
     {
         public UsuarioDTO Autenticar(string email, string senha)
         {
@@ -61,7 +61,7 @@ namespace ClinicaEstetica.DAL
                             Nome = reader["Nome"].ToString(),
                             Email = reader["Email"].ToString(),
                             Senha = reader["Senha"].ToString(),
-                            Status = (bool)reader["Senha"],
+                            Status = (bool)reader["Status"],
                             IdTipoUsuario = (int)reader["IdTipoUsuario"]
                         });
                     }
@@ -132,7 +132,7 @@ namespace ClinicaEstetica.DAL
             try
             {
                 Conectar();
-                string sql = "UPDATE INTO Usuario SET IdTipoUsuario=@idTipo, Nome=@nome, Email=@email, Senha=@senha, Status=@status WHERE IdUsuario=@idUsuario";
+                string sql = "UPDATE Usuario SET IdTipoUsuario=@idTipo, Nome=@nome, Email=@email, Senha=@senha, Status=@status WHERE IdUsuario=@idUsuario";
                 command = new SqlCommand(sql, connection);
                 command.Parameters.AddWithValue("@idTipo", usuario.IdTipoUsuario);
                 command.Parameters.AddWithValue("@nome", usuario.Nome);
@@ -176,12 +176,52 @@ namespace ClinicaEstetica.DAL
             {
                 throw new Exception($"Erro ao buscar usuário: {ex.Message}");
             }
-            finally 
+            finally
             {
                 Desconectar();
             }
         }
+        public void Delete(int id)
+        {
+            SqlTransaction transacao = null;
+            try
+            {
+                Conectar();
+                transacao = connection.BeginTransaction();
+                //Excluir AgendamentoServico
+                using (SqlCommand cmd1 = new SqlCommand(@"DELETE FROM AgendamentoServico 
+                                                  WHERE IdAgendamento 
+                                                  IN(SELECT IdAgendamento 
+                                                  FROM Agendamento WHERE IdUsuarioCadastro = @id)", connection, transacao))
+                {
+                    cmd1.Parameters.AddWithValue("@id", id);
+                    cmd1.ExecuteNonQuery();
+                }
 
-    
+                //Excluir Agendamento
+                using (SqlCommand cmd2 = new SqlCommand(@"DELETE FROM Agendamento
+                                                  WHERE IdUsuarioCadastro = @id", connection, transacao))
+                {
+                    cmd2.Parameters.AddWithValue("@id", id);
+                    cmd2.ExecuteNonQuery();
+                }
+
+                //Excluir Usuario
+                using (SqlCommand cmd3 = new SqlCommand(@"DELETE FROM Usuario
+                                                  WHERE IdUsuario = @id", connection, transacao))
+                {
+                    cmd3.Parameters.AddWithValue("@id", id);
+                    cmd3.ExecuteNonQuery();
+                }
+            
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception($"Erro ao buscar usuário: {ex.Message}");
+            }
+        }
+
+
     }
 }

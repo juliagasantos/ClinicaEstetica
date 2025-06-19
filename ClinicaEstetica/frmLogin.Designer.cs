@@ -1,6 +1,6 @@
 ﻿namespace ClinicaEstetica
 {
-    partial class Form1
+    partial class frmLogin
     {
         /// <summary>
         /// Variável de designer necessária.

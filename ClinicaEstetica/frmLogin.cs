@@ -12,9 +12,9 @@ using System.Windows.Forms;
 
 namespace ClinicaEstetica
 {
-    public partial class Form1 : Form
+    public partial class frmLogin : Form
     {
-        public Form1()
+        public frmLogin()
         {
             InitializeComponent();
         }
@@ -37,6 +37,8 @@ namespace ClinicaEstetica
             if (usuarioDTO != null)
             {
                 MessageBox.Show($"Bem vindo(a) {usuarioDTO.Nome}", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                frmUsuario frmUsuario = new frmUsuario();
+                frmUsuario.Show();
             }
             else
             {
